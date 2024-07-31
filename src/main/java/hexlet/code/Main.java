@@ -2,6 +2,7 @@ package hexlet.code;
 
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.sql.Statement;
 
 public class Main {
     public static void main(String[] args) throws SQLException {
@@ -12,9 +13,19 @@ public class Main {
                 statement.execute(sql);
             }
 
-            var sql2 = "INSERT INTO users (username, phone) VALUES ('tommy', '123456789')";
-            try (var statement2 = conn.createStatement()) {
-                statement2.executeUpdate(sql2);
+            var sql2 = "INSERT INTO users (username, phone) VALUES (?, ?)";
+            try (var preparedStatement = conn.prepareStatement(sql2, Statement.RETURN_GENERATED_KEYS)) {
+                preparedStatement.setString(1, "Sarah");
+                preparedStatement.setString(2, "333333333");
+                preparedStatement.executeUpdate();
+                // Если ключ составной, значений может быть несколько
+                // В нашем случае, ключ всего один
+                var generatedKeys = preparedStatement.getGeneratedKeys();
+                if (generatedKeys.next()) {
+                    System.out.println(generatedKeys.getLong(1));
+                } else {
+                    throw new SQLException("DB have not returned an id after saving the entity");
+                }
             }
 
             var sql3 = "SELECT * FROM users";
